@@ -536,6 +536,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 
 		strncpy(g_transID, trans_id, sizeof(g_transID)-1);
 		WebcfgDebug("g_transID is %s\n", g_transID);
+		WEBCFG_FREE(trans_id);
 	}
         
 	WebcfgDebug("Add mp entries to tmp list\n");
@@ -835,7 +836,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		mp = mp->next;
 	}
 	WebcfgDebug("The current_doc_count is %d\n",current_doc_count);
-	WEBCFG_FREE(trans_id);
+	//WEBCFG_FREE(trans_id);
 
 	//Apply aker doc at the end when all other docs are processed.
 	if(akerSet)

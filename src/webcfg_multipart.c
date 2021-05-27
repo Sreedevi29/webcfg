@@ -681,6 +681,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 				{
 					WebcfgInfo("WebConfig SET Request\n");
 					setValues(reqParam, paramCount, ATOMIC_SET_WEBCONFIG, NULL, NULL, &ret, &ccspStatus);
+					WebcfgInfo("Added delay 100 after setValues\n");
+					sleep(100);
 					if(ret == WDMP_SUCCESS)
 					{
 						WebcfgInfo("setValues success. ccspStatus : %d\n", ccspStatus);

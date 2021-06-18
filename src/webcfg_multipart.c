@@ -76,6 +76,7 @@ static char *supplementaryDocs_header=NULL;
 static multipartdocs_t *g_mp_head = NULL;
 pthread_mutex_t multipart_t_mut =PTHREAD_MUTEX_INITIALIZER;
 static int eventFlag = 0;
+
 char * get_global_transID(void)
 {
     return g_transID;
@@ -584,6 +585,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		err = 0;
 
 		webconfig_tmp_data_t * subdoc_node = NULL;
+		WebcfgInfo("mp->name_space %s\n", mp->name_space);
 		subdoc_node = getTmpNode(mp->name_space);
 
 		if(subdoc_node == NULL)
@@ -713,8 +715,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							{
 								addWebConfgNotifyMsg(mp->name_space, mp->etag, "success", "none", subdoc_node->cloud_trans_id,0, "status",0, NULL, 200);
 							}
-							WebcfgDebug("deleteFromTmpList as doc is applied\n");
-							deleteFromTmpList(mp->name_space);
+							WebcfgInfo("deleteFromTmpList as doc is applied\n");
+							//deleteFromTmpList(mp->name_space);
 							if(mp->isSupplementarySync == 0)
 							{
 								checkDBList(mp->name_space,mp->etag, NULL);
@@ -745,9 +747,11 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							if(checkRootDelete() == WEBCFG_SUCCESS)
 							{
 								//Delete tmp queue root as all docs are applied
+								webconfig_tmp_data_t *next_node = NULL;
 								WebcfgInfo("Delete tmp queue root as all docs are applied\n");
 								WebcfgDebug("root version to delete is %lu\n", (long)version);
-								deleteFromTmpList("root");
+								delete_success_docs_tmplist();
+								deleteFromTmpList("root", &next_node);
 							}
 							WebcfgDebug("processMsgpackSubdoc is success as all the docs are applied\n");
 							rv = WEBCFG_SUCCESS;
@@ -807,7 +811,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 							{
 								addWebConfgNotifyMsg(mp->name_space, mp->etag, "failed", result, subdoc_node->cloud_trans_id, 0,"status",ccspStatus, NULL, 200);
 							}
-							WebcfgDebug("checkRootUpdate\n");
+							WebcfgInfo("checkRootUpdate\n");
 							//No root update for supplementary sync
 							if(!get_global_supplementarySync() && (ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS) && (checkRootUpdate() == WEBCFG_SUCCESS))
 							{
@@ -2175,31 +2179,30 @@ void reqParam_destroy( int paramCnt, param_t *reqObj )
 //Root will be the first doc always in tmp list and will be deleted when all the docs are success. Delete root doc from tmp list when tmp list has one element root.
 WEBCFG_STATUS checkRootDelete()
 {
-	int count =0;
 	webconfig_tmp_data_t *temp = NULL;
 	temp = get_global_tmp_node();
-
+	int docSuccess =0;
 	while (NULL != temp)
 	{
-		if(count > 1)
-		{
-			WebcfgDebug("tmp list count is %d\n", count);
-			break;
-		}
-		WebcfgDebug("Root check ====> temp->name %s\n", temp->name);
+		WebcfgInfo("Root delete check ====> temp->name %s\n", temp->name);
+		WebcfgInfo("Root delete check ====> temp->status %s\n", temp->status);
 		if( strcmp("root", temp->name) != 0)
 		{
-			WebcfgDebug("Found doc in tmp list\n");
-			count = count+1;
-		}
-		else
-		{
-			count = 1;
+			if(strcmp("success", temp->status) == 0)
+			{
+				docSuccess = 1;
+				WebcfgInfo("docsucess flag is 1 temp->status %s\n", temp->status);
+			}
+			else
+			{
+				docSuccess = 0;
+				WebcfgInfo("docsucess flag is 0  temp->status %s\n", temp->status);
+				break;
+			}
 		}
 		temp= temp->next;
 	}
-
-	if(count == 1)
+	if( docSuccess == 1)
 	{
 		WebcfgInfo("Tmp list root doc delete is required\n");
 		return WEBCFG_SUCCESS;
@@ -2207,25 +2210,20 @@ WEBCFG_STATUS checkRootDelete()
 	else
 	{
 		WebcfgInfo("Tmp list root doc delete is not required\n");
-	}
+	}		
 	return WEBCFG_FAILURE;
 }
 
 //Update root version to DB when tmp list has one element root.
 WEBCFG_STATUS checkRootUpdate()
 {
-	int count =0;
 	webconfig_tmp_data_t *temp = NULL;
 	temp = get_global_tmp_node();
-
+	int docSuccess =0;
 	while (NULL != temp)
 	{
-		if(count > 1)
-		{
-			WebcfgDebug("tmp list count is %d\n", count);
-			break;
-		}
-		WebcfgDebug("Root check ====> temp->name %s\n", temp->name);
+		WebcfgInfo("Root delete check ====> temp->name %s\n", temp->name);
+		WebcfgInfo("Root update check ====> temp->status %s\n", temp->status);
 		if((temp->error_code == 204 && (temp->error_details != NULL && strstr(temp->error_details, "doc_unsupported") != NULL)) || (temp->isSupplementarySync == 1)) //skip supplementary docs
 		{
 			if(temp->isSupplementarySync)
@@ -2240,17 +2238,25 @@ WEBCFG_STATUS checkRootUpdate()
 		}
 		else if( strcmp("root", temp->name) != 0)
 		{
-			WebcfgDebug("Found doc in tmp list\n");
-			count = count+1;
+			if(strcmp("success", temp->status) == 0)
+			{
+				docSuccess = 1;
+				WebcfgInfo("docsucess flag is 1 temp->status %s\n", temp->status);
+			}			
+			else
+			{
+				docSuccess = 0;
+				WebcfgInfo("docsucess flag is 0  temp->status %s\n", temp->status);
+				break;
+			}
 		}
 		else
 		{
-			count = 1;
-		}
+			WebcfgInfo("docs not found in templist\n");
+		}	
 		temp= temp->next;
 	}
-
-	if(count == 1)
+	if( docSuccess == 1)
 	{
 		WebcfgInfo("root DB update is required\n");
 		return WEBCFG_SUCCESS;
@@ -2258,7 +2264,7 @@ WEBCFG_STATUS checkRootUpdate()
 	else
 	{
 		WebcfgInfo("root DB update is not required\n");
-	}
+	}		
 	return WEBCFG_FAILURE;
 }
 
@@ -2291,13 +2297,15 @@ void updateRootVersionToDB()
 void deleteRootAndMultipartDocs()
 {
 	WEBCFG_STATUS dStatus =0;
+	webconfig_tmp_data_t *next_node = NULL;
 	//Delete root only when all the primary and supplementary docs are applied .
 	if(checkRootDelete() == WEBCFG_SUCCESS)
 	{
 		//Delete tmp queue root as all docs are applied
-		WebcfgDebug("Delete tmp queue root as all docs are applied\n");
+		WebcfgInfo("Delete tmp queue root as all docs are applied\n");
 		//WebcfgInfo("root version to delete is %lu\n", (long)version);
-		dStatus = deleteFromTmpList("root");
+		delete_success_docs_tmplist();
+		dStatus = deleteFromTmpList("root", &next_node);
 		if(dStatus == 0)
 		{
 			WebcfgInfo("Delete tmp queue root is success\n");
@@ -2326,11 +2334,11 @@ void failedDocsRetry()
 				WebcfgInfo("Retrying for subdoc %s error_code %lu\n", temp->name, (long)temp->error_code);
 				if(retryMultipartSubdoc(temp, temp->name) == WEBCFG_SUCCESS)
 				{
-					WebcfgDebug("The subdoc %s set is success\n", temp->name);
+					WebcfgInfo("The subdoc %s set is success\n", temp->name);
 				}
 				else
 				{
-					WebcfgDebug("The subdoc %s set is failed\n", temp->name);
+					WebcfgInfo("The subdoc %s set is failed\n", temp->name);
 				}
 			}
 			else
@@ -2339,13 +2347,13 @@ void failedDocsRetry()
 
 				//To get the exact time diff for retry from present time do the below
 				time_diff = updateRetryTimeDiff(temp->retry_timestamp);
-				WebcfgDebug("The docname is %s and diff is %d retry time stamp is %s\n", temp->name, time_diff, printTime(temp->retry_timestamp));
+				WebcfgInfo("The docname is %s and diff is %d retry time stamp is %s\n", temp->name, time_diff, printTime(temp->retry_timestamp));
 				set_doc_fail(1);
 			}
 		}
 		else
 		{
-			WebcfgDebug("Retry skipped for %s (%s)\n",temp->name,temp->error_details);
+			WebcfgInfo("Retry skipped for %s (%s)\n",temp->name,temp->error_details);
 		}
 		temp= temp->next;
 	}

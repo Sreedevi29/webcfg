@@ -175,7 +175,7 @@ void* blobEventHandler()
 	ret = unregisterWebcfgEvent();
 	if(ret)
 	{
-		WebcfgDebug("unregisterWebcfgEvent success\n");
+		WebcfgInfo("unregisterWebcfgEvent success\n");
 	}
 	else
 	{
@@ -305,10 +305,10 @@ void* processSubdocEvents()
 							sendSuccessNotification(subdoc_node, eventParam->subdoc_name, eventParam->version, eventParam->trans_id);
 							WebcfgDebug("AddToDB subdoc_name %s version %lu\n", eventParam->subdoc_name, (long)eventParam->version);
 							checkDBList(eventParam->subdoc_name,eventParam->version, NULL);
-							WebcfgDebug("checkRootUpdate\n");
+							WebcfgInfo("checkRootUpdate\n");
 							if(checkRootUpdate() == WEBCFG_SUCCESS)
 							{
-								WebcfgDebug("updateRootVersionToDB\n");
+								WebcfgInfo("updateRootVersionToDB\n");
 								updateRootVersionToDB();
 							}
 							addNewDocEntry(get_successDocCount());

@@ -526,7 +526,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		{
 			akerIndex = m;
 			akerSet = 1;
-			WebcfgDebug("akerIndex is %d, skip aker doc and process at the end\n", akerIndex);
+			WebcfgInfo("akerIndex is %d, skip aker doc and process at the end\n", akerIndex);
 			continue;
 		}
 		webconfig_tmp_data_t * subdoc_node = NULL;
@@ -569,7 +569,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 						//If request type is BLOB, start event handler thread to process various error handling operations based on the events received from components.
 						if(eventFlag == 0)
 						{
-							WebcfgInfo("starting initEventHandlingTask\n");
+							WebcfgInfo("starting initEventHandlingTask with delay 3 mins\n");
+							sleep(180);
 							initEventHandlingTask();
 							processWebcfgEvents();
 							eventFlag = 1;
@@ -735,7 +736,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		webconfig_tmp_data_t * subdoc_node = NULL;
 		subdoc_node = getTmpNode(mp->entries[akerIndex].name_space);
 		max_retry_sleep = (int) pow(2, backoff_max_time) -1;
-		WebcfgDebug("max_retry_sleep is %d\n", max_retry_sleep );
+		WebcfgInfo("max_retry_sleep is %d\n", max_retry_sleep );
 
 		while(1)
 		{

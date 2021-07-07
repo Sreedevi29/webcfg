@@ -109,9 +109,9 @@ void *WebConfigMultipartTask(void *status)
 	{
 		if(forced_sync)
 		{
-			WebcfgDebug("Triggered Forced sync\n");
+			WebcfgInfo("Triggered Forced sync\n");
 			processWebconfgSync((int)Status);
-			WebcfgDebug("reset forced_sync after sync\n");
+			WebcfgInfo("reset forced_sync after sync\n");
 			forced_sync = 0;
 			setForceSync("", "", 0);
 		}
@@ -126,13 +126,13 @@ void *WebConfigMultipartTask(void *status)
 		}
 
 		retry_flag = get_doc_fail();
-		WebcfgDebug("The retry flag value is %d\n", retry_flag);
+		WebcfgInfo("The retry flag value is %d\n", retry_flag);
 		if (retry_flag == 1)
 		{
 			clock_gettime(CLOCK_REALTIME, &ts);
 			ts.tv_sec += 900;
 
-			WebcfgDebug("B4 sync_condition pthread_cond_timedwait\n");
+			WebcfgInfo("B4 sync_condition pthread_cond_timedwait\n");
 			rv = pthread_cond_timedwait(&sync_condition, &sync_mutex, &ts);
 			WebcfgInfo("The retry flag value is %d\n", get_doc_fail());
 			WebcfgInfo("The value of rv %d\n", rv);
@@ -144,7 +144,7 @@ void *WebConfigMultipartTask(void *status)
 
 		if(rv == ETIMEDOUT && get_doc_fail() == 1)
 		{
-			WebcfgDebug("Inside the timedout condition\n");
+			WebcfgInfo("Inside the timedout condition\n");
 			set_doc_fail(0);
 			failedDocsRetry();
 			WebcfgDebug("After the failedDocsRetry\n");
@@ -156,13 +156,13 @@ void *WebConfigMultipartTask(void *status)
 
 			// Identify ForceSync based on docname
 			getForceSync(&ForceSyncDoc, &ForceSyncTransID);
-			WebcfgDebug("ForceSyncDoc %s ForceSyncTransID. %s\n", ForceSyncDoc, ForceSyncTransID);
+			WebcfgInfo("ForceSyncDoc %s ForceSyncTransID. %s\n", ForceSyncDoc, ForceSyncTransID);
 			if(ForceSyncTransID !=NULL)
 			{
 				if((ForceSyncDoc != NULL) && strlen(ForceSyncDoc)>0)
 				{
 					forced_sync = 1;
-					WebcfgDebug("Received signal interrupt to Force Sync\n");
+					WebcfgInfo("Received signal interrupt to Force Sync\n");
 					WEBCFG_FREE(ForceSyncDoc);
 					WEBCFG_FREE(ForceSyncTransID);
 				}
@@ -202,10 +202,10 @@ void *WebConfigMultipartTask(void *status)
 		pthread_cond_signal (get_global_event_con());
 		pthread_mutex_unlock (get_global_event_mut());
 
-		WebcfgDebug("event process thread: pthread_join\n");
+		WebcfgInfo("event process thread: pthread_join\n");
 		JoinThread (get_global_process_threadid());
 
-		WebcfgDebug("event thread: pthread_join\n");
+		WebcfgInfo("event thread: pthread_join\n");
 		JoinThread (get_global_event_threadid());
 	}
 

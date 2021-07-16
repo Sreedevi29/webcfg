@@ -203,7 +203,15 @@ void *WebConfigMultipartTask(void *status)
 		//To disable supplementary sync for RDKV platforms
 		#if !defined(RDK_PERSISTENT_PATH_VIDEO)
 			ts.tv_sec += getMaintenanceSyncSeconds(maintenance_count);
-			maintenance_doc_sync = 1;
+			char *ForceSyncDoc = NULL;
+			char* ForceSyncTransID = NULL;
+			getForceSync(&ForceSyncDoc, &ForceSyncTransID);
+			if((ForceSyncDoc == NULL) && (ForceSyncTransID == NULL) && (!get_bootSync()))
+			{
+				WebcfgInfo("force sync and bootup sync is not in progress, delete all success docs");	
+				delete_all_success_docs_tmplist();
+				maintenance_doc_sync = 1;
+			}
 			WebcfgInfo("The Maintenance Sync triggers at %s\n", printTime((long long)ts.tv_sec));
 		#else
 			maintenance_doc_sync = 0;

@@ -395,18 +395,18 @@ WEBCFG_STATUS addToTmpList()
 	char * cloud_transaction_id = NULL;
 
 	mp_count = get_multipartdoc_count();
-	WebcfgDebug("multipartdoc count is %d\n", mp_count);
+	WebcfgInfo("multipartdoc count is %d\n", mp_count);
 
-	WebcfgDebug("checkTmpRootUpdate, proceed to addToTmpList\n");
+	WebcfgInfo("checkTmpRootUpdate, proceed to addToTmpList\n");
 	checkTmpRootUpdate();
 
 	delete_tmp_docs_list();
-	WebcfgDebug("Deleted existing tmp list based on sync type, proceed to addToTmpList\n");
+	WebcfgInfo("Deleted existing tmp list based on sync type, proceed to addToTmpList\n");
 
 	multipartdocs_t *mp_node = NULL;
 	mp_node = get_global_mp();
 
-	WebcfgDebug("The numdocs is %d\n",numOfMpDocs);
+	WebcfgInfo("The numdocs is %d\n",numOfMpDocs);
 	cloud_transaction_id = get_global_transID();
 	while(mp_node != NULL)
 	{
@@ -420,7 +420,7 @@ WEBCFG_STATUS addToTmpList()
 			{
 				memset( new_node, 0, sizeof( webconfig_tmp_data_t ) );
 
-				WebcfgDebug("Adding root doc to list\n");
+				WebcfgInfo("Adding root doc to list\n");
 				new_node->name = strdup("root");
 				new_node->version = 0;
 				if(!get_global_supplementarySync())
@@ -431,7 +431,7 @@ WEBCFG_STATUS addToTmpList()
 				new_node->status = strdup("pending");
 				//For root, isSupplementarySync is always 0 as root version is for primary sync.
 				new_node->isSupplementarySync = 0;
-				WebcfgDebug("new_node->isSupplementarySync is %d\n", new_node->isSupplementarySync);
+				WebcfgInfo("new_node->isSupplementarySync is %d\n", new_node->isSupplementarySync);
 				new_node->error_details = strdup("none");
 				new_node->error_code = 0;
 				new_node->trans_id = 0;
@@ -488,7 +488,7 @@ WEBCFG_STATUS addToTmpList()
 			else
 			{
 				webconfig_tmp_data_t *temp = NULL;
-				WebcfgDebug("Adding docs to list\n");
+				WebcfgInfo("Adding docs to list\n");
 				temp = g_head;
 				while(temp->next !=NULL)
 				{
@@ -498,15 +498,15 @@ WEBCFG_STATUS addToTmpList()
 				pthread_mutex_unlock (&webconfig_tmp_data_mut);
 			}
 
-			WebcfgDebug("--->>doc %s with version %lu is added to list\n", new_node->name, (long)new_node->version);
+			WebcfgInfo("--->>doc %s with version %lu is added to list\n", new_node->name, (long)new_node->version);
 			numOfMpDocs = numOfMpDocs + 1;
 		}
-		WebcfgDebug("numOfMpDocs %d\n", numOfMpDocs);
+		WebcfgInfo("numOfMpDocs %d\n", numOfMpDocs);
 
 			WebcfgDebug("addToTmpList success\n");
 			retStatus = WEBCFG_SUCCESS;
 	}
-	WebcfgDebug("addToList return %d\n", retStatus);
+	WebcfgInfo("addToList return %d\n", retStatus);
 	return retStatus;
 }
 
@@ -558,8 +558,8 @@ WEBCFG_STATUS updateDBlist(char *docname, uint32_t version, char* rootstr)
 	while (NULL != webcfgdb)
 	{
 		pthread_mutex_lock (&webconfig_db_mut);
-		WebcfgDebug("mutex_lock in updateDBlist\n");
-		WebcfgDebug("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu webcfgdb->root_string %s\n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname), webcfgdb->root_string);
+		WebcfgInfo("mutex_lock in updateDBlist\n");
+		WebcfgInfo("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu webcfgdb->root_string %s\n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname), webcfgdb->root_string);
 		if( strcmp(docname, webcfgdb->name) == 0)
 		{
 			webcfgdb->version = version;
@@ -575,14 +575,14 @@ WEBCFG_STATUS updateDBlist(char *docname, uint32_t version, char* rootstr)
 					webcfgdb->root_string = strdup(rootstr);
 				}
 			}
-			WebcfgDebug("webcfgdb %s is updated to version %lu webcfgdb->root_string %s\n", docname, (long)webcfgdb->version, webcfgdb->root_string);
+			WebcfgInfo("webcfgdb %s is updated to version %lu webcfgdb->root_string %s\n", docname, (long)webcfgdb->version, webcfgdb->root_string);
 			pthread_mutex_unlock (&webconfig_db_mut);
 			WebcfgDebug("mutex_unlock if docname is webcfgdb name\n");
 			return WEBCFG_SUCCESS;
 		}
 		webcfgdb= webcfgdb->next;
 		pthread_mutex_unlock (&webconfig_db_mut);
-		WebcfgDebug("mutex_unlock in doc name is not webcfgdb name\n");
+		WebcfgInfo("mutex_unlock in doc name is not webcfgdb name\n");
 	}
 	return WEBCFG_FAILURE;
 }
@@ -591,7 +591,7 @@ WEBCFG_STATUS updateTmpList(webconfig_tmp_data_t *temp, char *docname, uint32_t 
 {
 	if (NULL != temp)
 	{
-		WebcfgDebug("updateTmpList: node is pointing to temp->name %s \n",temp->name);
+		WebcfgInfo("updateTmpList: node is pointing to temp->name %s \n",temp->name);
 		pthread_mutex_lock (&webconfig_tmp_data_mut);
 		WebcfgDebug("mutex_lock in updateTmpList\n");
 		if( strcmp(docname, temp->name) == 0)
@@ -611,10 +611,10 @@ WEBCFG_STATUS updateTmpList(webconfig_tmp_data_t *temp, char *docname, uint32_t 
 			}
 			temp->error_code = error_code;
 			temp->trans_id = trans_id;
-			WebcfgDebug("updateTmpList: retry %d\n", retry);
+			WebcfgInfo("updateTmpList: retry %d\n", retry);
 			if(!retry)
 			{
-				WebcfgDebug("updateTmpList: reset temp->retry_count\n");
+				WebcfgInfo("updateTmpList: reset temp->retry_count\n");
 				temp->retry_count = 0;
 			}
 			WebcfgInfo("doc %s is updated to version %lu status %s error_details %s error_code %lu trans_id %lu temp->retry_count %d\n", docname, (long)temp->version, temp->status, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count);
@@ -631,16 +631,16 @@ WEBCFG_STATUS updateTmpList(webconfig_tmp_data_t *temp, char *docname, uint32_t 
 
 
 //delete doc from webcfg Tmp list
-WEBCFG_STATUS deleteFromTmpList(char* doc_name)
+WEBCFG_STATUS deleteFromTmpList(char* doc_name, webconfig_tmp_data_t **next_node)
 {
 	webconfig_tmp_data_t *prev_node = NULL, *curr_node = NULL;
-
+	WebcfgInfo("inside delete temp list\n");
 	if( NULL == doc_name )
 	{
 		WebcfgError("Invalid value for doc\n");
 		return WEBCFG_FAILURE;
 	}
-	WebcfgDebug("doc to be deleted: %s\n", doc_name);
+	WebcfgInfo("doc to be deleted: %s\n", doc_name);
 
 	prev_node = NULL;
 	pthread_mutex_lock (&webconfig_tmp_data_mut);	
@@ -650,28 +650,30 @@ WEBCFG_STATUS deleteFromTmpList(char* doc_name)
 	{
 		if(strcmp(curr_node->name, doc_name) == 0)
 		{
-			WebcfgDebug("Found the node to delete\n");
+			WebcfgInfo("Found the node to delete\n");
 			if( NULL == prev_node )
 			{
-				WebcfgDebug("need to delete first doc\n");
+				WebcfgInfo("need to delete first doc\n");
 				g_head = curr_node->next;
 			}
 			else
 			{
-				WebcfgDebug("Traversing to find node\n");
-				prev_node->next = curr_node->next;
+				WebcfgInfo("Traversing to find node\n");
+				prev_node->next = curr_node->next; 
+				*next_node = curr_node->next;
+
 			}
 
-			WebcfgDebug("Deleting the node entries\n");
+			WebcfgInfo("Deleting the node entries\n");
 			WEBCFG_FREE( curr_node->name );
 			WEBCFG_FREE( curr_node->status );
 			WEBCFG_FREE( curr_node->error_details );
 			WEBCFG_FREE( curr_node->cloud_trans_id);
 			WEBCFG_FREE( curr_node );
 			curr_node = NULL;
-			WebcfgDebug("Deleted successfully and returning..\n");
+			WebcfgInfo("Deleted successfully and returning..\n");
 			numOfMpDocs =numOfMpDocs - 1;
-			WebcfgDebug("numOfMpDocs after delete is %d\n", numOfMpDocs);
+			WebcfgInfo("numOfMpDocs after delete is %d\n", numOfMpDocs);
 			pthread_mutex_unlock (&webconfig_tmp_data_mut);
 			return WEBCFG_SUCCESS;
 		}
@@ -694,31 +696,76 @@ void delete_tmp_list()
     {
         temp = head;
 	head = head->next;
-	WebcfgDebug("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
+	WebcfgInfo("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
 	free(temp);
 	temp = NULL;
     }
 	pthread_mutex_lock (&webconfig_tmp_data_mut);
     	g_head = NULL;
 	pthread_mutex_unlock (&webconfig_tmp_data_mut);
-    	WebcfgDebug("mutex_unlock Deleted all docs from tmp list\n");
+    	WebcfgInfo("mutex_unlock Deleted all docs from tmp list\n");
 }
-
 //Delete all docs other than root from tmp list based on sync type primary/secondary
 void delete_tmp_docs_list()
 {
-   webconfig_tmp_data_t *temp = NULL;
+   webconfig_tmp_data_t *temp = NULL, *next_node = NULL;
    temp = get_global_tmp_node();
 
-    WebcfgDebug("Inside delete_tmp_docs_list()\n");
+    WebcfgInfo("Inside delete_tmp_docs_list()\n");
     while(temp != NULL)
     {
 	//skip root delete
+	WebcfgInfo("temp->name %s\n", temp->name);
 	if((strcmp(temp->name, "root") !=0) && (temp->isSupplementarySync == get_global_supplementarySync()))
 	{
-		WebcfgDebug("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
-		deleteFromTmpList(temp->name);
+		WebcfgInfo("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
+		deleteFromTmpList(temp->name, &next_node); 
+		temp = next_node;
+		continue;
 	}
+	WebcfgInfo("after deletefromtmplist\n");
+	temp = temp->next;
+    }
+}
+//Delete all docs other than root from tmp list irrespective of sync type
+void delete_success_docs_tmplist()
+{
+   webconfig_tmp_data_t *temp = NULL, *next_node;
+   temp = get_global_tmp_node();
+
+    WebcfgInfo("Inside delete_success_docs_list()\n");
+    while(temp != NULL)
+    {
+	//skip root delete
+	if((strcmp(temp->name, "root") !=0))
+	{
+		WebcfgInfo("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
+		deleteFromTmpList(temp->name,&next_node);
+		temp = next_node;
+		continue;	
+	}
+	WebcfgInfo("after deletefromtmplist\n");
+	WebcfgInfo("temp->name %s\n", temp->name);
+	temp = temp->next;
+    }
+}
+//Delete all success docs and retrieve failed docs
+void delete_all_success_docs_tmplist()
+{
+   webconfig_tmp_data_t *temp = NULL, *next_node;
+   temp = get_global_tmp_node();
+
+    WebcfgInfo("Inside delete_all_success_docs_list()\n");
+    while(temp != NULL)
+    {
+	if((strcmp(temp->name, "success") ==0))
+	{
+		WebcfgInfo("Delete node--> temp->name %s temp->version %lu temp->status %s temp->isSupplementarySync %d temp->error_details %s temp->error_code %lu temp->trans_id %lu temp->retry_count %d temp->cloud_trans_id %s\n",temp->name, (long)temp->version, temp->status, temp->isSupplementarySync, temp->error_details, (long)temp->error_code, (long)temp->trans_id, temp->retry_count, temp->cloud_trans_id);
+		deleteFromTmpList(temp->name,&next_node);
+		temp = next_node;
+		continue;	
+	}
+	WebcfgInfo("after deletefromtmplist\n");
 	temp = temp->next;
     }
 }
@@ -726,14 +773,15 @@ void delete_tmp_docs_list()
 //Update tmp root for primary sync
 void checkTmpRootUpdate()
 {
+   WebcfgInfo("numOfMpDocs %d\n", numOfMpDocs);
    if((numOfMpDocs !=0) && !get_global_supplementarySync())
    {
 	webconfig_tmp_data_t * root_node = NULL;
 	root_node = getTmpNode("root");
-	WebcfgDebug("Update root version %lu to tmp list.\n", (long)get_global_root());
+	WebcfgInfo("Update root version %lu to tmp list.\n", (long)get_global_root());
 	updateTmpList(root_node, "root", get_global_root(), "pending", "none", 0, 0, 0);
    }
-   WebcfgDebug("root updateTmpList done\n");
+   WebcfgInfo("root updateTmpList done\n");
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1136,15 +1184,15 @@ webconfig_tmp_data_t * getTmpNode(char *docname)
 	//Traverse through doc list & fetch required doc.
 	while (NULL != temp)
 	{
-		WebcfgDebug("getTmpNode: temp->name %s, temp->version %lu\n",temp->name, (long)temp->version);
+		WebcfgInfo("getTmpNode: temp->name %s, temp->version %lu\n",temp->name, (long)temp->version);
 		if( strcmp(docname, temp->name) == 0)
 		{
-			WebcfgDebug("subdoc node : name %s version %lu status %s error_details %s error_code %hu trans_id %hu temp->retry_count %d temp->cloud_trans_id %s\n", temp->name, (long)temp->version, temp->status, temp->error_details, temp->error_code, temp->trans_id, temp->retry_count, temp->cloud_trans_id);
+			WebcfgInfo("subdoc node : name %s version %lu status %s error_details %s error_code %hu trans_id %hu temp->retry_count %d temp->cloud_trans_id %s\n", temp->name, (long)temp->version, temp->status, temp->error_details, temp->error_code, temp->trans_id, temp->retry_count, temp->cloud_trans_id);
 			return temp;
 		}
 		temp= temp->next;
 	}
-	WebcfgDebug("getTmpNode failed for doc %s\n", docname);
+	WebcfgInfo("getTmpNode failed for doc %s\n", docname);
 	return NULL;
 }
 

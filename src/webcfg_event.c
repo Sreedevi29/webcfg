@@ -311,12 +311,12 @@ void* processSubdocEvents()
 							//No DB update for supplementary sync as version is not required to be stored.
 							if(subdoc_node->isSupplementarySync == 0)
 							{
-								WebcfgDebug("AddToDB subdoc_name %s version %lu\n", eventParam->subdoc_name, (long)eventParam->version);
+								WebcfgInfo("AddToDB subdoc_name %s version %lu\n", eventParam->subdoc_name, (long)eventParam->version);
 								checkDBList(eventParam->subdoc_name,eventParam->version, NULL);
-								WebcfgDebug("checkRootUpdate\n");
+								WebcfgInfo("checkRootUpdate ack event\n");
 								if(checkRootUpdate() == WEBCFG_SUCCESS)
 								{
-									WebcfgDebug("updateRootVersionToDB\n");
+									WebcfgInfo("updateRootVersionToDB\n");
 									updateRootVersionToDB();
 								}
 								addNewDocEntry(get_successDocCount());
@@ -326,7 +326,7 @@ void* processSubdocEvents()
 								WebcfgInfo("No DB update for supplementary sync as version is not required to be stored.\n");
 							}
 							//root doc delete from tmp list and mp docs destroy can be done irrespective of primary/supplementary checks as all docs success can be reached during any sync.
-							WebcfgDebug("check for deleteRootAndMultipartDocs\n");
+							WebcfgInfo("check for deleteRootAndMultipartDocs for ack event\n");
 							deleteRootAndMultipartDocs();
 						}
 						else
@@ -499,7 +499,7 @@ void* processSubdocEvents()
 							{
 								WebcfgInfo("AddToDB subdoc_name %s version %lu\n", eventParam->subdoc_name, (long)eventParam->version);
 								checkDBList(eventParam->subdoc_name,eventParam->version, NULL);
-								WebcfgDebug("checkRootUpdate\n");
+								WebcfgInfo("checkRootUpdate tmp version same as event\n");
 								if(checkRootUpdate() == WEBCFG_SUCCESS)
 								{
 									WebcfgDebug("updateRootVersionToDB\n");
@@ -507,7 +507,7 @@ void* processSubdocEvents()
 								}
 								addNewDocEntry(get_successDocCount());
 							}
-							WebcfgDebug("check for deleteRootAndMultipartDocs\n");
+							WebcfgInfo("check for deleteRootAndMultipartDocs for tmp same as event\n");
 							deleteRootAndMultipartDocs();
 						}
 					}
@@ -691,6 +691,7 @@ void createTimerExpiryEvent(char *docName, uint16_t transid)
 void sendSuccessNotification(webconfig_tmp_data_t *subdoc_node, char *name, uint32_t version, uint16_t txid)
 {
 	char *cloud_trans_id = NULL;
+	WebcfgInfo("updatetemplist\n");
 	updateTmpList(subdoc_node, name, version, "success", "none", 0, txid, 0);
 	if(subdoc_node !=NULL && subdoc_node->cloud_trans_id !=NULL)
 	{
@@ -702,7 +703,8 @@ void sendSuccessNotification(webconfig_tmp_data_t *subdoc_node, char *name, uint
 		cloud_trans_id = "unknown";
 	}
 	addWebConfgNotifyMsg(name, version, "success", "none", cloud_trans_id,0, "status",0, NULL, 200);
-	deleteFromTmpList(name);
+	WebcfgInfo("send success notification deletetemplist\n");
+	//deleteFromTmpList(name);
 }
 
 //start internal timer for required doc when timeout value is received
@@ -1013,8 +1015,8 @@ WEBCFG_STATUS retryMultipartSubdoc(webconfig_tmp_data_t *docNode, char *docName)
 							{
 								addWebConfgNotifyMsg(gmp->name_space, gmp->etag, "success", "none", docNode->cloud_trans_id, 0, "status", 0, NULL, 200);
 							}
-							WebcfgDebug("deleteFromTmpList as scalar doc is applied\n");
-							deleteFromTmpList(gmp->name_space);
+							WebcfgInfo("deleteFromTmpList as scalar doc is applied\n");
+							//deleteFromTmpList(gmp->name_space);
 							WebcfgDebug("docNode->isSupplementarySync is %d\n", docNode->isSupplementarySync);
 							if(docNode->isSupplementarySync == 0)
 							{
@@ -1031,7 +1033,7 @@ WEBCFG_STATUS retryMultipartSubdoc(webconfig_tmp_data_t *docNode, char *docName)
 							{
 								WebcfgInfo("retryMultipartSubdoc. No DB update is required for supplementary sync\n");
 							}
-							WebcfgDebug("check for deleteRootAndMultipartDocs\n");
+							WebcfgDebug("check for deleteRootAndMultipartDocs scalar doc\n");
 							deleteRootAndMultipartDocs();
 						}
 						rv = WEBCFG_SUCCESS;
